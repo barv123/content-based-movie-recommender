@@ -1,5 +1,7 @@
 # Content-Based Movie Recommender Lab
 
+**Live Demo:** [Open the interactive recommender](https://barv123.github.io/content-based-movie-recommender/)
+
 A browser-based experimental recommender system built on the **MovieLens 100K** dataset.
 
 The project implements and compares two content-based recommendation strategies:
@@ -58,11 +60,31 @@ Therefore, the recommendation algorithm remains **content-based rather than coll
 
 ---
 
-## 3. Content Representation
+## 3. Data Encoding
+
+MovieLens 100K `u.item` contains non-ASCII movie titles and uses a legacy Latin-1-compatible encoding.
+
+To preserve titles correctly, the file is loaded as raw bytes and decoded explicitly with:
+
+```javascript
+new TextDecoder("iso-8859-1")
+```
+
+This avoids corrupted characters in titles such as:
+
+```text
+Á köldum klaka (Cold Fever) (1994)
+```
+
+The ratings file `u.data` contains numeric / ASCII content and is read normally.
+
+---
+
+## 4. Content Representation
 
 Each movie is represented by an **18-dimensional binary genre vector**.
 
-Examples of dimensions include:
+The known genre dimensions are:
 
 - Action
 - Adventure
@@ -88,7 +110,7 @@ For each genre:
 - `1` means that the movie belongs to the genre;
 - `0` means that it does not.
 
-For example, a simplified representation of a movie could be:
+For example, a simplified representation could be:
 
 ```text
 [Action, Adventure, Comedy, Drama, Sci-Fi]
@@ -100,7 +122,7 @@ This converts movie metadata into a numerical feature space in which similarity 
 
 ---
 
-## 4. Cosine Similarity
+## 5. Cosine Similarity
 
 Similarity between two content vectors is calculated using cosine similarity:
 
@@ -118,15 +140,17 @@ where:
 
 For the binary genre vectors used in this project:
 
-- values near `1.0` indicate very similar genre profiles;
+- values near `1.0` indicate highly aligned genre profiles;
 - intermediate values indicate partial genre overlap;
 - `0` indicates no aligned active genre features.
 
 The value shown in the interface as **Similarity score** is this cosine similarity.
 
+It is a similarity measure between feature vectors.
+
 ---
 
-# 5. Item-to-Item Recommendation
+# 6. Item-to-Item Recommendation
 
 The Item-to-Item model represents the user's immediate context through one selected **active movie**.
 
@@ -150,7 +174,7 @@ Equal similarity scores are resolved alphabetically to make ranking deterministi
 
 ---
 
-## 5.1 Example: Toy Story (1995)
+## 6.1 Example: Toy Story (1995)
 
 For the demonstration scenario, the active movie is:
 
@@ -174,11 +198,11 @@ Top-5 Item-to-Item recommendations:
 
 The first recommendation has similarity `1.000` because its active genre vector is identical to the Toy Story genre vector in the features used by this model.
 
-This illustrates an important characteristic of genre-only content representations: two semantically different movies may become indistinguishable when they have exactly the same metadata vector.
+This illustrates an important limitation of genre-only representations: two different movies can become indistinguishable when they have the same metadata vector.
 
 ---
 
-# 6. Profile-Based Recommendation
+# 7. Profile-Based Recommendation
 
 A single active movie represents immediate context, but it may not reflect the user's broader preferences.
 
@@ -206,7 +230,7 @@ The three watched movies are excluded from the recommendation candidates.
 
 ---
 
-## 6.1 Demonstration User Profile
+## 7.1 Demonstration User Profile
 
 The demonstration history contains:
 
@@ -243,7 +267,7 @@ This recommendation list is very different from the Toy Story Item-to-Item list 
 
 ---
 
-# 7. Item-to-Item vs Profile-Based Comparison
+# 8. Item-to-Item vs Profile-Based Comparison
 
 The demonstration scenario intentionally contrasts:
 
@@ -260,7 +284,9 @@ with:
 
 ```text
 Star Wars (1977)
-The Empire Strikes Back (1980)
+
+Empire Strikes Back, The (1980)
+
 Return of the Jedi (1983)
 ```
 
@@ -291,19 +317,19 @@ In this scenario:
 - Item-to-Item follows Toy Story's animation / children's / comedy context;
 - Profile-Based follows the action / adventure / science-fiction-oriented historical profile.
 
-This difference illustrates why the two mechanisms can serve different recommendation contexts.
+The two mechanisms therefore model different recommendation contexts.
 
 ---
 
-# 8. Cosine Normalization Diagnostic
+# 9. Cosine Normalization Diagnostic
 
 The project also compares **raw dot product** and **cosine similarity**.
 
-This experiment is included because an unnormalized dot product can favor candidates with a larger number of active features.
+This experiment demonstrates why normalization matters when candidates contain different numbers of active features.
 
 ---
 
-## 8.1 Controlled Example
+## 9.1 Controlled Example
 
 Toy Story contains three active genre dimensions:
 
@@ -342,11 +368,11 @@ The dot product cannot distinguish the two candidates because both contain all t
 
 Cosine similarity does distinguish them because it normalizes vector magnitude.
 
-The extra unmatched dimensions increase the candidate vector norm and reduce the similarity score.
+The extra unmatched dimensions increase the candidate vector norm and reduce similarity.
 
 ---
 
-## 8.2 Real-Catalog Effect
+## 9.2 Real-Catalog Effect
 
 For the Toy Story example:
 
@@ -377,19 +403,19 @@ Cosine ranking:
 4. 101 Dalmatians
 5. Air Bud
 
-This provides both a controlled mathematical example and evidence that normalization can change ranking behavior in the real catalog.
+This provides both a controlled mathematical example and evidence that normalization changes ranking behavior in the real catalog.
 
 ---
 
-# 9. Popularity, Head and Long Tail
+# 10. Popularity, Head and Long Tail
 
 To analyze catalog discovery, movie popularity is measured by the number of ratings in `u.data`.
 
-For this project an explicit operational definition is used:
+For this project an explicit operational definition is used.
 
 ### Head / popular
 
-Top **20%** of movies ranked by rating count.
+Top **20%** of movies ranked by rating count:
 
 ```text
 337 movies
@@ -397,7 +423,7 @@ Top **20%** of movies ranked by rating count.
 
 ### Tail / long-tail
 
-Remaining **80%** of the catalog.
+Remaining **80%** of the catalog:
 
 ```text
 1,345 movies
@@ -407,21 +433,21 @@ This 20/80 split is an experimental definition used in this project rather than 
 
 A Tail movie therefore means:
 
-> a movie belonging to the less frequently rated 80% of the MovieLens 100K catalog under this definition.
+> a movie belonging to the less frequently rated 80% of the MovieLens 100K catalog under this project's definition.
 
 It does not necessarily mean that the movie is obscure outside the dataset.
 
 ---
 
-# 10. Full Catalog Discovery Benchmark
+# 11. Full Catalog Discovery Benchmark
 
-A single hand-selected example is useful for interpretation but insufficient for making general observations about catalog exposure.
+A single hand-selected example is useful for interpretation but insufficient for making broader observations about catalog exposure.
 
 The project therefore includes a reproducible offline benchmark over **all eligible MovieLens users**.
 
 ---
 
-## 10.1 User Selection
+## 11.1 User Selection
 
 A rating is treated as a positive historical interaction when:
 
@@ -441,9 +467,9 @@ For each eligible user:
 
 1. positive ratings are ordered by timestamp;
 2. the three most recent positive movies form the history;
-3. the most recent one is used as the Item-to-Item active item;
+3. the most recent movie is used as the Item-to-Item active item;
 4. all three watched movies are excluded from recommendation candidates;
-5. both algorithms return Top-5 recommendations.
+5. both approaches return Top-5 recommendations.
 
 With 942 users and five recommendations per model:
 
@@ -459,26 +485,26 @@ Therefore each approach generates:
 
 ---
 
-# 11. Full Benchmark Results
+# 12. Full Benchmark Results
 
 | Metric | Item-to-Item | Profile-Based |
 |---|---:|---:|
 | Eligible users | 942 | 942 |
 | Recommendation exposures | 4,710 | 4,710 |
-| Tail exposure | **71%** | **62%** |
+| Tail exposure | **72%** | **62%** |
 | Catalog coverage | **28%** | **25%** |
 | Unique recommended movies | **474** | **418** |
-| Mean popularity (# ratings) | **74.9** | **96.1** |
+| Mean popularity (# ratings) | **74.8** | **95.2** |
 | Mean cosine similarity | **0.966** | **0.850** |
 
 ---
 
-## 11.1 Long-Tail Exposure
+## 12.1 Long-Tail Exposure
 
 Item-to-Item:
 
 ```text
-71%
+72%
 ```
 
 Profile-Based:
@@ -487,11 +513,11 @@ Profile-Based:
 62%
 ```
 
-Under the project's Head/Tail definition, Item-to-Item recommendations therefore produced more long-tail exposure in this benchmark.
+Under the project's Head/Tail definition, Item-to-Item produced more long-tail exposure in this benchmark.
 
 ---
 
-## 11.2 Catalog Coverage
+## 12.2 Catalog Coverage
 
 Catalog coverage is calculated as:
 
@@ -518,22 +544,22 @@ The Item-to-Item approach reached a larger fraction of the available catalog in 
 
 ---
 
-## 11.3 Recommendation Popularity
+## 12.3 Recommendation Popularity
 
-Mean number of MovieLens ratings:
+Mean number of MovieLens ratings among recommended movies:
 
 ```text
-Item-to-Item:  74.9
-Profile-Based: 96.1
+Item-to-Item:  74.8
+Profile-Based: 95.2
 ```
 
-Thus Item-to-Item recommendations were less popular on average under the benchmark configuration.
+Thus Item-to-Item recommendations were less popular on average under this benchmark configuration.
 
 This result is consistent with its higher observed Tail exposure.
 
 ---
 
-## 11.4 Mean Similarity
+## 12.4 Mean Similarity
 
 Mean recommendation cosine similarity:
 
@@ -546,11 +572,11 @@ One reason is structural.
 
 Item-to-Item compares a candidate against one concrete binary movie vector, while Profile-Based recommendation compares candidates against an averaged centroid containing fractional weights across several genres.
 
-The two scores therefore represent related but not identical recommendation contexts and should not be interpreted as direct measures of user satisfaction.
+The two scores therefore represent related but not identical recommendation contexts.
 
 ---
 
-# 12. Interpretation
+# 13. Interpretation
 
 The experiments highlight a useful distinction between the two recommendation strategies.
 
@@ -558,24 +584,24 @@ The experiments highlight a useful distinction between the two recommendation st
 
 Item-to-Item recommendation is strongly anchored to the currently active object.
 
-In this implementation it produced:
+In the full benchmark it produced:
 
 - higher mean cosine similarity;
 - higher long-tail exposure;
 - broader catalog coverage;
 - lower average recommendation popularity.
 
-This makes it useful when immediate content context is important.
+This makes it suitable for contexts where immediate item similarity is important.
 
 ---
 
 ## Profile-Based
 
-Profile-Based recommendation aggregates several historical interactions and therefore creates a more stable representation of the user's broader taste.
+Profile-Based recommendation aggregates several historical interactions and therefore creates a more stable representation of broader user taste.
 
-It can recommend content that is less directly related to the current item while still being aligned with the historical profile.
+It can recommend content that is less directly related to the current item while still aligning with the historical profile.
 
-This makes it useful when persistent user preference is more important than immediate session context.
+This makes it suitable for contexts where persistent preferences matter more than immediate session context.
 
 ---
 
@@ -597,7 +623,7 @@ A production recommender system could use these signals separately or combine th
 
 ---
 
-# 13. Business Interpretation
+# 14. Business Interpretation
 
 Catalog discovery matters because a recommendation system that repeatedly concentrates exposure on the same highly popular items may underuse the available catalog.
 
@@ -607,7 +633,7 @@ In this experiment, Item-to-Item recommendation generated:
 - greater catalog coverage;
 - lower average item popularity.
 
-These results suggest that the method may provide stronger catalog-discovery behavior under this dataset and experimental design.
+These results suggest stronger catalog-discovery behavior under this dataset and experimental design.
 
 However, the benchmark measures **recommendation exposure**, not downstream user behavior.
 
@@ -621,13 +647,13 @@ It does not directly measure:
 
 Therefore, no causal claim about user retention or business performance is made from this offline experiment alone.
 
-In a production system, such hypotheses should be validated with online evaluation or A/B testing.
+In a production environment, such hypotheses should be validated using online evaluation or A/B testing.
 
 ---
 
-# 14. Explainability
+# 15. Explainability
 
-The application exposes the internal logic of recommendations rather than showing only movie titles.
+The application exposes the internal logic of recommendations rather than displaying only movie titles.
 
 For Item-to-Item recommendations it displays:
 
@@ -639,19 +665,21 @@ For Item-to-Item recommendations it displays:
 
 For Profile-Based recommendations it additionally displays:
 
-- the learned user-profile weights;
-- the profile features matched by each candidate.
+- learned user-profile weights;
+- profile features matched by each candidate.
 
-This makes the recommendation process easier to inspect and debug.
+This makes recommendation behavior easier to inspect, explain, and debug.
 
 ---
 
-# 15. Computational Optimization
+# 16. Computational Optimization
 
 The full benchmark evaluates:
 
 ```text
-942 users × 2 models × approximately 1,682 candidates
+942 users
+× 2 recommendation strategies
+× approximately 1,682 candidate movies
 ```
 
 A naive implementation could repeatedly:
@@ -661,7 +689,7 @@ A naive implementation could repeatedly:
 3. sort the complete catalog;
 4. retain only the first five items.
 
-The final implementation keeps the mathematical ranking unchanged but improves execution efficiency through:
+The final implementation keeps the mathematical ranking logic unchanged while improving execution efficiency through:
 
 - cached movie feature-vector norms;
 - pre-built movie lookup indexes;
@@ -669,15 +697,19 @@ The final implementation keeps the mathematical ranking unchanged but improves e
 - incremental metric aggregation;
 - batched browser execution with progress updates.
 
-These changes improve runtime and interface responsiveness without changing recommendation scores or the experimental methodology.
+These changes improve runtime and browser responsiveness without changing the recommendation methodology.
 
-The optimized and original full benchmark produced the same reported results.
+The ranking function itself remains based on cosine similarity.
+
+A later correction to MovieLens title decoding can affect deterministic alphabetical tie-breaking among candidates with identical similarity scores, because correctly decoded titles may sort differently from corrupted strings.
+
+This can slightly change exposure-based metrics while leaving the similarity function itself unchanged.
 
 ---
 
-# 16. Limitations
+# 17. Limitations
 
-## 16.1 Coarse genre representation
+## 17.1 Coarse genre representation
 
 The model uses only 18 binary genre features.
 
@@ -688,7 +720,6 @@ It does not consider:
 - plot descriptions;
 - keywords;
 - visual style;
-- release-year similarity;
 - language;
 - learned text embeddings.
 
@@ -698,7 +729,7 @@ This explains why several different movies can legitimately receive a similarity
 
 ---
 
-## 16.2 Equal weighting of genres
+## 17.2 Equal weighting of genres
 
 Every genre dimension has the same importance.
 
@@ -712,26 +743,26 @@ Sci-Fi = 1
 
 The model does not learn that one feature may be more informative than another.
 
-Possible extensions include TF-IDF-style feature weighting or learned embeddings.
+Possible extensions include weighted metadata, TF-IDF-style weighting, or learned embeddings.
 
 ---
 
-## 16.3 Equal weighting of profile history
+## 17.3 Equal weighting of profile history
 
 The three movies used in the Profile-Based model are averaged equally.
 
 The system does not currently weight interactions according to:
 
-- recency;
-- rating strength;
-- frequency;
+- recency beyond history selection;
+- rating strength beyond the positive-interaction threshold;
+- interaction frequency;
 - explicit user preference.
 
 A more sophisticated profile could use weighted averaging.
 
 ---
 
-## 16.4 Head/Tail definition
+## 17.4 Head/Tail definition
 
 The Head/Tail split is an explicit project-level operational choice:
 
@@ -742,19 +773,24 @@ Remaining 80%            → Tail
 
 Alternative thresholds would produce different absolute exposure values.
 
-The threshold should therefore always be reported together with the benchmark results.
+The threshold should therefore always be reported together with benchmark results.
 
 ---
 
-## 16.5 Offline benchmark
+## 17.5 Offline benchmark
 
 The benchmark evaluates catalog exposure and recommendation characteristics.
 
-It is not an online user study and cannot directly establish effects on user satisfaction or retention.
+It is not an online user study and cannot directly establish effects on:
+
+- satisfaction;
+- engagement;
+- retention;
+- conversion.
 
 ---
 
-# 17. Reproducibility
+# 18. Reproducibility
 
 The application uses deterministic ranking.
 
@@ -763,14 +799,14 @@ When multiple movies have exactly the same similarity score, ties are resolved a
 The benchmark also uses a deterministic definition of user history:
 
 1. keep positive interactions where `rating >= 4`;
-2. sort by timestamp;
+2. sort them by timestamp;
 3. select the three most recent unique movies.
 
-This means the same dataset and code produce the same experimental results.
+This means that the same dataset, encoding, implementation, and ranking rules produce reproducible experimental results.
 
 ---
 
-# 18. Technology
+# 19. Technology
 
 The application intentionally uses a minimal technology stack:
 
@@ -780,26 +816,26 @@ The application intentionally uses a minimal technology stack:
 - MovieLens `u.item`
 - MovieLens `u.data`
 
-No external API is required.
-
-No recommendation library is required.
+No external recommendation API is required.
 
 No external movie service is used.
 
-This keeps the project fully local and reproducible.
+No external recommendation library is required.
+
+This keeps the project fully local, transparent, and reproducible.
 
 ---
 
-# 19. Project Structure
+# 20. Project Structure
 
 ```text
-HW2/
+content-based-movie-recommender/
 │
 ├── index.html
 ├── style.css
 ├── data.js
 ├── script.js
-├── readme.md
+├── README.md
 ├── u.item
 └── u.data
 ```
@@ -810,11 +846,11 @@ Defines the application interface and experimental sections.
 
 ### `style.css`
 
-Contains the complete user-interface styling.
+Contains the application styling.
 
 ### `data.js`
 
-Loads and parses MovieLens movie and rating data.
+Loads and parses MovieLens movie and rating data, including explicit Latin-1 decoding for `u.item`.
 
 ### `script.js`
 
@@ -844,7 +880,7 @@ User ratings and timestamps.
 
 ---
 
-# 20. How to Run
+# 21. How to Run Locally
 
 Because the application loads local dataset files through `fetch()`, it should be opened through a local web server rather than by double-clicking `index.html`.
 
@@ -872,7 +908,19 @@ The application should report:
 
 ---
 
-# 21. Recommended Demonstration Scenario
+# 22. Online Demo
+
+The project is also deployed through GitHub Pages.
+
+**Live application:**
+
+https://barv123.github.io/content-based-movie-recommender/
+
+The deployed version uses the same repository files and dataset as the local version.
+
+---
+
+# 23. Recommended Demonstration Scenario
 
 A useful scenario for demonstrating the difference between the two recommendation modes is:
 
@@ -904,15 +952,15 @@ This scenario clearly demonstrates the difference between immediate item context
 
 ---
 
-# 22. Main Findings
+# 24. Main Findings
 
 The implementation and experiments lead to five main observations.
 
-### 1. Cosine similarity produces interpretable content-based rankings.
+### 1. Cosine similarity produces interpretable content-based rankings
 
-The ranking can be explained directly through overlapping movie genre features.
+Recommendations can be explained directly through overlapping movie genre features.
 
-### 2. Item-to-Item and Profile-Based recommendation capture different contexts.
+### 2. Item-to-Item and Profile-Based recommendation capture different contexts
 
 The demonstration scenario produced:
 
@@ -922,37 +970,48 @@ Overlap@5 = 0%
 
 showing that immediate content context and historical taste can result in substantially different recommendation lists.
 
-### 3. Cosine normalization changes ranking behavior.
+### 3. Cosine normalization changes ranking behavior
 
-The controlled experiment shows that the raw dot product can give the same score to an exact match and a candidate containing additional unrelated genres, while cosine similarity penalizes the unmatched dimensions.
+The controlled experiment shows that raw dot product can give the same score to an exact match and a candidate containing additional unrelated genres, while cosine similarity penalizes unmatched active dimensions through normalization.
 
-### 4. Item-to-Item generated stronger catalog discovery in the full benchmark.
+### 4. Item-to-Item generated stronger catalog discovery in the full benchmark
 
 Across 942 eligible users:
 
 ```text
 Tail exposure:
-71% Item-to-Item
+
+72% Item-to-Item
 62% Profile-Based
 
+
 Catalog coverage:
+
 28% Item-to-Item
 25% Profile-Based
 
+
 Unique recommended movies:
+
 474 Item-to-Item
 418 Profile-Based
+
+
+Mean popularity:
+
+74.8 Item-to-Item
+95.2 Profile-Based
 ```
 
-### 5. Content representation limits recommendation quality.
+### 5. Content representation limits recommendation quality
 
 Genre-only features are transparent and easy to interpret, but they are coarse.
 
-Identical metadata vectors produce identical similarity values even when movies differ substantially in story, style, or audience.
+Identical metadata vectors produce identical similarity values even when movies differ substantially in story, style, audience, or other semantic characteristics.
 
 ---
 
-# 23. Conclusion
+# 25. Conclusion
 
 This project demonstrates that content-based recommendation is not only a similarity-computation problem but also a **representation and context problem**.
 
@@ -964,6 +1023,8 @@ The full benchmark additionally shows that recommendation strategy can affect:
 - popularity concentration;
 - catalog coverage.
 
-Finally, the normalization experiment demonstrates why cosine similarity is preferable to an unnormalized dot product when items contain different numbers of active features.
+The normalization experiment demonstrates why cosine similarity is useful when items contain different numbers of active features.
 
-The resulting application provides a reproducible framework for both generating recommendations and analyzing their algorithmic and catalog-level behavior.
+Finally, the project shows that small implementation details such as feature representation, deterministic tie-breaking, and correct dataset decoding can influence reproducibility and catalog-level evaluation.
+
+The resulting application provides a reproducible framework for both generating content-based recommendations and analyzing their algorithmic and catalog-level behavior.
