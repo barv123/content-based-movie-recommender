@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Content-Based Movie Recommender Lab
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+</head>
+
+
+<body>
+
+<main class="app-shell">
+
+
+    <!-- =================================================
+         HEADER
+    ================================================== -->
+
+    <header class="hero">
+
+        <div class="hero-main">
+
+            <span class="kicker">
+                MovieLens 100K · Content-Based Filtering
+            </span>
+
+            <h1>
+                Content-Based Movie Recommender Lab
+            </h1>
+
+            <p>
+                Item-to-Item and Profile-Based recommendations
+                with cosine similarity, explainability,
+                model comparison, normalization diagnostics,
+                and catalog-discovery analysis.
+            </p>
+
+        </div>
+
+
+        <div class="hero-meta">
+
+            <div
+                id="dataset-summary"
+                class="dataset-summary"
+            >
+                Loading dataset...
+            </div>
+
+            <div
+                id="app-status"
+                class="status loading"
+            >
+                Initializing...
+            </div>
+
+        </div>
+
+    </header>
+
+
+
+    <!-- =================================================
+         01 — ITEM TO ITEM
+    ================================================== -->
+
+    <section class="card">
+
+        <div class="section-heading">
+
+            <div class="section-number">
+                01
+            </div>
+
+            <div>
+
+                <h2>
+                    Item-to-Item Recommendation
+                </h2>
+
+                <p>
+                    Select one active movie.
+                    The system compares its 18-dimensional
+                    binary genre vector with every candidate
+                    using cosine similarity.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="controls">
+
+            <label for="active-movie">
+                Active movie
+            </label>
+
+            <select id="active-movie">
+
+                <option
+                    value=""
+                    disabled
+                    selected
+                >
+                    Select an active movie
+                </option>
+
+            </select>
+
+
+            <button
+                id="item-btn"
+                type="button"
+            >
+                Run Item-to-Item Top-5
+            </button>
+
+        </div>
+
+
+        <div
+            id="item-result"
+            class="result-box empty-state"
+        >
+            Select an active movie to inspect
+            Top-5 recommendations and their explanations.
+        </div>
+
+    </section>
+
+
+
+    <!-- =================================================
+         02 — PROFILE BASED
+    ================================================== -->
+
+    <section class="card">
+
+        <div class="section-heading">
+
+            <div class="section-number">
+                02
+            </div>
+
+            <div>
+
+                <h2>
+                    Profile-Based Recommendation
+                </h2>
+
+                <p>
+                    Select three watched movies.
+                    Their genre vectors are averaged
+                    into a user taste profile.
+                    Unseen movies are ranked against
+                    this profile with cosine similarity.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="three-selects">
+
+            <div>
+
+                <label for="profile-movie-1">
+                    Watched movie 1
+                </label>
+
+                <select id="profile-movie-1">
+
+                    <option
+                        value=""
+                        disabled
+                        selected
+                    >
+                        Select watched movie 1
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div>
+
+                <label for="profile-movie-2">
+                    Watched movie 2
+                </label>
+
+                <select id="profile-movie-2">
+
+                    <option
+                        value=""
+                        disabled
+                        selected
+                    >
+                        Select watched movie 2
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div>
+
+                <label for="profile-movie-3">
+                    Watched movie 3
+                </label>
+
+                <select id="profile-movie-3">
+
+                    <option
+                        value=""
+                        disabled
+                        selected
+                    >
+                        Select watched movie 3
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+
+        <button
+            id="profile-btn"
+            type="button"
+            class="full-button"
+        >
+            Build Profile & Recommend Top-5
+        </button>
+
+
+        <div
+            id="profile-result"
+            class="result-box empty-state"
+        >
+            Select three different movies
+            to reveal the learned taste profile
+            and its Top-5 recommendations.
+        </div>
+
+    </section>
+
+
+
+    <!-- =================================================
+         03 — MODEL COMPARISON
+    ================================================== -->
+
+    <section class="card accent-card">
+
+        <div class="section-heading">
+
+            <div class="section-number">
+                03
+            </div>
+
+            <div>
+
+                <h2>
+                    Model Comparison
+                </h2>
+
+                <p>
+                    Compare Item-to-Item and Profile-Based
+                    recommendations for the selections above.
+                    The analysis reports overlap, similarity,
+                    popularity, long-tail exposure,
+                    and genre coverage.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <button
+            id="compare-btn"
+            type="button"
+            class="secondary-button"
+        >
+            Compare Current Selections
+        </button>
+
+
+        <div
+            id="compare-result"
+            class="result-box empty-state"
+        >
+            Choose one active movie in Section 01
+            and three watched movies in Section 02,
+            then run the comparison.
+        </div>
+
+
+        <p
+            id="tail-definition"
+            class="definition-note"
+        ></p>
+
+    </section>
+
+
+
+    <!-- =================================================
+         04 — NORMALIZATION
+    ================================================== -->
+
+    <section class="card">
+
+        <div class="section-heading">
+
+            <div class="section-number">
+                04
+            </div>
+
+            <div>
+
+                <h2>
+                    Cosine Normalization Diagnostic
+                </h2>
+
+                <p>
+                    Compare raw dot product with cosine similarity
+                    to demonstrate why normalization matters
+                    for multi-feature items.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <button
+            id="bias-btn"
+            type="button"
+            class="secondary-button"
+        >
+            Analyze Dot Product vs Cosine
+        </button>
+
+
+        <div
+            id="bias-result"
+            class="result-box empty-state"
+        >
+            Select an active movie in Section 01,
+            then run the normalization diagnostic.
+        </div>
+
+    </section>
+
+
+
+    <!-- =================================================
+         05 — FULL CATALOG BENCHMARK
+    ================================================== -->
+
+    <section class="card accent-card">
+
+        <div class="section-heading">
+
+            <div class="section-number">
+                05
+            </div>
+
+            <div>
+
+                <h2>
+                    Catalog Discovery Benchmark
+                </h2>
+
+                <p>
+                    Run a reproducible offline benchmark
+                    over all eligible MovieLens user histories
+                    to compare long-tail exposure
+                    and catalog coverage.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <button
+            id="benchmark-btn"
+            type="button"
+            class="secondary-button"
+        >
+            Run Full Catalog Benchmark
+        </button>
+
+
+        <div
+            id="benchmark-result"
+            class="result-box empty-state"
+        >
+            The benchmark uses rating data only
+            to construct positive user histories
+            and measure movie popularity.
+            Recommendation scores remain content-based.
+        </div>
+
+    </section>
+
+
+
+    <!-- =================================================
+         FOOTER
+    ================================================== -->
+
+    <footer class="footer-note">
+
+        <strong>
+            Methodological note:
+        </strong>
+
+        movie recommendations are scored exclusively
+        from MovieLens genre features.
+
+        Rating data are used only for
+        popularity analysis and offline benchmark histories.
+
+    </footer>
+
+
+</main>
+
+
+<script src="data.js"></script>
+<script src="script.js"></script>
+
+
+</body>
+</html>
